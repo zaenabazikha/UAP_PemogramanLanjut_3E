@@ -133,16 +133,11 @@ public class AkademikMahasiswa extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        txtNim = new JTextField(20);
-        styleField(txtNim);
-        txtNama = new JTextField(20);
-        styleField(txtNama);
-        txtJurusan = new JTextField(20);
-        styleField(txtJurusan);
-        txtSemester = new JTextField(20);
-        styleField(txtSemester);
-        txtKelas = new JTextField(20);
-        styleField(txtKelas);
+        txtNim = new JTextField(20); styleField(txtNim);
+        txtNama = new JTextField(20); styleField(txtNama);
+        txtJurusan = new JTextField(20); styleField(txtJurusan);
+        txtSemester = new JTextField(20); styleField(txtSemester);
+        txtKelas = new JTextField(20); styleField(txtKelas);
 
         addFormRow(p, gbc, 0, "🏷️ Nomor Induk (NIM)", txtNim);
         addFormRow(p, gbc, 1, "👤 Nama Lengkap", txtNama);
@@ -157,9 +152,7 @@ public class AkademikMahasiswa extends JFrame {
         // Menambahkan '(ActionEvent e)' secara eksplisit agar library java.awt.event terpakai
         btnSimpan.addActionListener((ActionEvent e) -> simpanData());
 
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         p.add(btnSimpan, gbc);
@@ -219,5 +212,3 @@ public class AkademikMahasiswa extends JFrame {
         p.add(btnPanel, BorderLayout.SOUTH);
         return p;
     }
-
-}

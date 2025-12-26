@@ -148,8 +148,6 @@ public class AkademikMahasiswa extends JFrame {
         JButton btnSimpan = new JButton("💾 SIMPAN DATA");
         styleButton(btnSimpan, colPrimary);
 
-        // --- PERUBAHAN DI SINI ---
-        // Menambahkan '(ActionEvent e)' secara eksplisit agar library java.awt.event terpakai
         btnSimpan.addActionListener((ActionEvent e) -> simpanData());
 
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
@@ -198,8 +196,6 @@ public class AkademikMahasiswa extends JFrame {
         JButton btnHapus = new JButton("🗑️ Hapus");
         styleButton(btnHapus, new Color(100, 0, 0));
 
-        // --- PERUBAHAN DI SINI JUGA ---
-        // Menggunakan '(ActionEvent e)' supaya import tidak abu-abu
         btnRefresh.addActionListener((ActionEvent e) -> refreshAll());
         btnEdit.addActionListener((ActionEvent e) -> editData());
         btnHapus.addActionListener((ActionEvent e) -> hapusData());
@@ -212,3 +208,175 @@ public class AkademikMahasiswa extends JFrame {
         p.add(btnPanel, BorderLayout.SOUTH);
         return p;
     }
+
+    private JPanel createLaporanPanel() {
+        JPanel p = new JPanel(new BorderLayout());
+        p.setBorder(new EmptyBorder(15, 15, 15, 15));
+        p.setBackground(Color.WHITE);
+
+        areaLaporan = new JTextArea();
+        areaLaporan.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        areaLaporan.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        areaLaporan.setEditable(false);
+
+        JButton btnCetak = new JButton("🖨️ CETAK LAPORAN");
+        styleButton(btnCetak, new Color(39, 174, 96));
+
+        // --- PERUBAHAN DI SINI ---
+        btnCetak.addActionListener((ActionEvent e) -> generateLaporan());
+
+        p.add(new JScrollPane(areaLaporan), BorderLayout.CENTER);
+        p.add(btnCetak, BorderLayout.SOUTH);
+        return p;
+    }
+
+    // 5. HELPER METHODS
+    class GradientPanel extends JPanel {
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+            Color atas = new Color(164, 0, 0);
+            Color bawah = new Color(250, 250, 250);
+            g2d.setPaint(new GradientPaint(0, 0, atas, 0, getHeight(), bawah));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+
+    private JLabel createInfoCard(String title, String val, Color color) {
+        JLabel l = new JLabel("<html><center><p style='font-size:12px'>"+title+"</p><h1 style='font-size:36px'>"+val+"</h1></center></html>", JLabel.CENTER);
+        l.setOpaque(true);
+        l.setBackground(color);
+        l.setForeground(Color.WHITE);
+        l.setPreferredSize(new Dimension(250, 120));
+        return l;
+    }
+
+    private void styleField(JTextField txt) {
+        txt.setFont(fontRegular);
+        txt.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+    }
+
+    private void styleButton(JButton btn, Color bg) {
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(fontBold);
+        btn.setFocusPainted(false);
+    }
+
+    private void addFormRow(JPanel p, GridBagConstraints gbc, int row, String lbl, JTextField txt) {
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.3;
+        JLabel l = new JLabel(lbl);
+        l.setFont(fontBold);
+        p.add(l, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.7;
+        p.add(txt, gbc);
+    }
+
+    // 6. LOGIKA UTAMA (CRUD)
+    void simpanData() {
+        if(txtNim.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "NIM tidak boleh kosong!");
+            return;
+        }
+        dataMahasiswa.add(new Mahasiswa(
+                txtNim.getText(), txtNama.getText(), txtJurusan.getText(),
+                txtSemester.getText(), txtKelas.getText()
+        ));
+        simpanFile();
+        refreshAll();
+        JOptionPane.showMessageDialog(this, "Data Berhasil Disimpan!");
+        txtNim.setText(""); txtNama.setText(""); txtKelas.setText("");
+    }
+
+    void hapusData() {
+        int row = tabelData.getSelectedRow();
+        if(row < 0) {
+            JOptionPane.showMessageDialog(this, "Pilih data di tabel dulu!");
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(this, "Yakin hapus data ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if(confirm == JOptionPane.YES_OPTION) {
+            dataMahasiswa.remove(row);
+            simpanFile();
+            refreshAll();
+        }
+    }
+
+    void editData() {
+        int row = tabelData.getSelectedRow();
+        if(row < 0) {
+            JOptionPane.showMessageDialog(this, "Pilih baris yang mau diedit dulu!");
+            return;
+        }
+        Mahasiswa m = dataMahasiswa.get(row);
+        JTextField tNama = new JTextField(m.nama);
+        JTextField tJurusan = new JTextField(m.jurusan);
+        JTextField tSem = new JTextField(m.semester);
+        JTextField tKelas = new JTextField(m.kelas);
+
+        Object[] message = {
+                "Edit Nama:", tNama, "Edit Jurusan:", tJurusan,
+                "Edit Semester:", tSem, "Edit Kelas:", tKelas
+        };
+        int option = JOptionPane.showConfirmDialog(this, message, "Edit Data Mahasiswa (NIM: " + m.nim + ")", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            m.nama = tNama.getText();
+            m.jurusan = tJurusan.getText();
+            m.semester = tSem.getText();
+            m.kelas = tKelas.getText();
+            simpanFile();
+            refreshAll();
+            JOptionPane.showMessageDialog(this, "Data Berhasil Diupdate!");
+        }
+    }
+
+    void refreshAll() {
+        modelTabel.setRowCount(0);
+        for(Mahasiswa m : dataMahasiswa) {
+            modelTabel.addRow(new Object[]{m.nim, m.nama, m.jurusan, m.semester, m.kelas});
+        }
+        lblTotal.setText("<html><center><p style='font-size:12px'>👥 TOTAL MAHASISWA</p><h1 style='font-size:36px'>"+dataMahasiswa.size()+"</h1></center></html>");
+    }
+
+    void generateLaporan() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("=========================================\n");
+        sb.append("      LAPORAN DATA MAHASISWA 2025        \n");
+        sb.append("=========================================\n\n");
+        int no = 1;
+        for(Mahasiswa m : dataMahasiswa) {
+            sb.append(no++).append(". NIM   : ").append(m.nim).append("\n");
+            sb.append("   Nama  : ").append(m.nama).append("\n");
+            sb.append("   Jur   : ").append(m.jurusan).append("\n");
+            sb.append("   Kelas : ").append(m.kelas).append(" (Smt ").append(m.semester).append(")\n");
+            sb.append("-----------------------------------------\n");
+        }
+        areaLaporan.setText(sb.toString());
+    }
+
+    void simpanFile() {
+        try(PrintWriter pw = new PrintWriter(new FileWriter(namaFile))) {
+            for(Mahasiswa m : dataMahasiswa) pw.println(m.toCSV());
+        } catch(Exception e) { e.printStackTrace(); }
+    }
+
+    void bacaFile() {
+        File f = new File(namaFile);
+        if(!f.exists()) return;
+        try(BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String l;
+            while((l=br.readLine())!=null) {
+                String[] d = l.split(",");
+                if(d.length==5) dataMahasiswa.add(new Mahasiswa(d[0], d[1], d[2], d[3], d[4]));
+            }
+        } catch(Exception e) { e.printStackTrace(); }
+    }
+
+    public static void main(String[] args) {
+        try { UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel"); } catch(Exception e){}
+        SwingUtilities.invokeLater(() -> new AkademikMahasiswa());
+    }
+}
